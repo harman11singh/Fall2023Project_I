@@ -1,0 +1,374 @@
+---
+title: "Sleep, Health and Lifestyle Analysis"
+author: "Harman Singh Saggu T00727652, Raunaq Singh Dev T00737367, Nwaokenneya Precious T00727498"
+date: "`r Sys.Date()`"
+output: pdf_document:
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r lib} 
+library(knitr)
+library(dplyr)
+library(ggplot2)
+```
+
+```{r load_df}
+#Loading dataset
+sleep_data <- read.csv("C:/Users/saggu/Desktop/project1000/Sleep_health_and_lifestyle_dataset.csv")
+
+#Sample data
+head(sleep_data)
+
+```
+
+
+```{r m}
+#Measures of location
+attach(sleep_data)
+median(Age)
+median(Sleep.Duration)
+median(Quality.of.Sleep)
+median(Stress.Level)
+median(Heart.Rate)
+median(Daily.Steps)
+
+#Variability in data
+var(Age)
+var(Sleep.Duration)
+var(Quality.of.Sleep)
+var(Stress.Level)
+var(Heart.Rate)
+var(Daily.Steps)
+
+#Visualizing measures of location and variability
+par(mfrow = c(2,2))
+boxplot(median(Sleep.Duration), median(Quality.of.Sleep), 
+        median(Stress.Level),
+        main = "Boxplot of Measures of Location(MEDIAN)",
+        names = c("Sleep Duration", "Quality of Sleep", 
+                  "Stress Level"))
+boxplot(var(Sleep.Duration), var(Quality.of.Sleep), 
+        var(Stress.Level),
+        main = "Boxplot of Measures of Variability(VARIANCE)",
+        names = c("Sleep Duration", "Quality of Sleep", 
+                  "Stress Level"))
+
+#Visualizing sample data
+#focusing on sleep duration, quality of sleep and stress level
+par(mfrow = c(2,2)) #for plotting side by side
+hist(sleep_data$Sleep.Duration, main = "Histogram of Sleep Duration",
+     xlab = "Sleep Duration")
+hist(sleep_data$Quality.of.Sleep, main = "Histogram of Quality of Sleep",
+     xlab = "Quality of Sleep Level")
+hist(sleep_data$Stress.Level, main = "Histogram of Stress Level",
+     xlab = "Stress Level")
+
+
+
+
+```
+```{r occup}
+#Occupation list
+select(sleep_data, Occupation) %>% 
+  count(Occupation)
+```
+
+```{r one_sample_mean}
+#one sample mean
+
+# 1. Checking the hypothesis that the mean sleep duration for total subjects is
+# less than 7 (alpha = 0.05)
+
+# H0: mean sleep duration is >= 7
+# H1: mean sleep duration is < 7
+
+#using the t.test() function
+t.test(sleep_data$Sleep.Duration, mu = 7, alternative = "less",
+       conf.level = 0.95 )
+```
+Since the p-value derived from the t.test is greater than alpha, we fail to reject the null hypothesis.
+
+
+```{r one_sample_mean2}
+# 2. Checking the hypothesis that the mean stress level for all the subjects is
+# greater than 7 (alpha = 0.05)
+
+# H0: mean stress level <= 7
+# H1: mean stress level > 7
+
+t.test(sleep_data$Stress.Level, mu = 7, alternative = "greater",
+       conf.level = 0.95)
+```
+The p-value is greater than alpha so we fail to reject the null hypothesis
+
+```{r one_sample_mean3}
+# 3. Checking the hypothesis that the mean quality of sleep for all the subjects
+# is less than 7 (alpha = 0.05)
+
+# H0: mean quality of sleep >= 7
+# H1: mean quality of sleep < 7
+
+t.test(sleep_data$Quality.of.Sleep, mu = 7, alternative = "less",
+       conf.level = 0.95)
+```
+The p-value is greater than alpha so we fail to reject the null hypothesis.
+
+```{r one_sample_variance}
+#one sample variance
+
+# 3. Checking the hypothesis that the variance in age of subjects is not equal 
+# to 75 (alpha = 0.05)
+
+# H0: variance in age == 75
+# H1: variance in age != 75
+
+#using varTest() function from EnvStats package
+library(EnvStats)
+
+varTest(sleep_data$Age, alternative = "two.sided", sigma.squared = 75, 
+        conf.level = 0.95)
+```
+Since the p-value from the test is much greater than alpha, we fail to reject the null hypothesis.
+
+
+```{r two_sample_mean}
+#two sample mean
+
+# 4. Checking the hypothesis that the mean stress level of subjects with 
+# occupation Engineer is less than mean stress level of Scientist (alpha = 0.05)
+
+# H0: mean stress level of Engineer >= Scientist
+# H1: mean stress level of Engineer < Scientist
+
+#using t.test() for two samples
+t.test(sleep_data$Stress.Level[sleep_data$Occupation == "Engineer"], 
+       sleep_data$Stress.Level[sleep_data$Occupation == "Scientist"],
+       mu = 0,alternative = "less", conf.level = 0.95, paired = FALSE, 
+       var.equal = FALSE)
+```
+Since the p-value is very small, we reject the null hypothesis
+
+```{r two_sample_mean2}
+#two sample mean
+
+# Checking the hypothesis that the mean stress level of subjects with 
+# occupation Salesperson is less than mean stress level of Doctor 
+# (alpha = 0.05)
+
+
+# H0: mean stress level of Salesperson >= Doctor
+# H1: mean stress level of Salesperson < Doctor
+
+#using t.test() for two samples
+t.test(sleep_data$Stress.Level[sleep_data$Occupation == "Salesperson"], 
+       sleep_data$Stress.Level[sleep_data$Occupation == "Doctor"],
+       mu = 0,alternative = "less", conf.level = 0.95, paired = FALSE, 
+       var.equal = FALSE)
+```
+Since the p-value is greater than alpha we fail to reject the null hypothesis
+
+
+
+```{r two_sample_mean3}
+# 5. Checking the hypothesis that mean quality of sleep of subjects with occupation
+# Teacher is greater than occupation Engineer (alpha = 0.05)
+
+# H0: quality of sleep of Teacher <= Engineer
+# H1: quality of sleep of Teacher > Engineer
+
+t.test(sleep_data$Quality.of.Sleep[sleep_data$Occupation == "Teacher"], 
+       sleep_data$Quality.of.Sleep[sleep_data$Occupation == "Engineer"],
+       mu = 0,alternative = "greater", conf.level = 0.95, paired = FALSE, 
+       var.equal = FALSE)
+```
+Since p-value is greater than alpha, we fail to reject the null hypothesis
+
+
+```{r two_sample_mean4}
+# 6. Checking the hypothesis that mean sleep duration of subjects with occupation
+# Nurse is less than occupation Lawyer (alpha = 0.05)
+
+# H0: Sleep duration of Nurse >= Lawyer
+# H1: Sleep duration of Nurse < Lawyer
+
+t.test(sleep_data$Sleep.Duration[sleep_data$Occupation == "Nurse"], 
+       sleep_data$Sleep.Duration[sleep_data$Occupation == "Lawyer"],
+       mu = 0,alternative = "less", conf.level = 0.95, paired = FALSE, 
+       var.equal = FALSE)
+```
+Since the p-value is significantly small, we reject the null hypothesis
+
+
+```{r two_sample_proportion}
+#two sample proportion
+
+# 7. Checking the hypothesis that proportion of subjects with stress level 
+# greater than 6 is more than subjects with stress level < 6
+
+# H0: proportion of subjects with stress level < 6 is more 
+# H1: proportion of subjects with stress level > 6 is more
+
+#using prop.test() function
+x1 <- sum(as.numeric(sleep_data$Stress.Level < 6))
+x2 <- sum(as.numeric(sleep_data$Stress.Level > 6))
+n <- nrow(sleep_data)
+
+prop.test(x = c(x1,x2), n = c(n,n), alternative = "greater",
+          conf.level = 0.95, correct = FALSE)
+```
+Since p-value is significantly small, we reject the null hypothesis
+
+
+```{r two_sample_variance}
+#two sample variance
+
+# 8. Checking difference in variances in physical activity level between
+# male and female subjects (alpha = 0.05)
+
+# H0: physical activity level variance between male and female subjects ==
+# H1: physical activity level variance between male and female subjects !=
+
+#using var.test() function
+var.test(sleep_data$Physical.Activity.Level[sleep_data$Gender == "Male"],
+         sleep_data$Physical.Activity.Level[sleep_data$Gender == "Female"],
+         ratio = 1, alternative = "two.sided", conf.level = 0.95)
+```
+Since p-value is greater than alpha, we fail to reject the null hypothesis
+
+
+```{r normality_tests}
+#normality check
+
+# 9. Using QQ plot to check for normality of sleep duration, quality of sleep
+# and stress level
+
+par(mfrow = c(1,2))
+
+qqnorm(sleep_data$Sleep.Duration, main = "Sleep Duration QQ Plot")
+qqline(sleep_data$Sleep.Duration, col = "seagreen", lwd = 2)
+
+qqnorm(sleep_data$Quality.of.Sleep, main = "Quality of Sleep QQ Plot")
+qqline(sleep_data$Quality.of.Sleep, col = "orange", lwd = 2)
+
+qqnorm(sleep_data$Stress.Level, main = "Stress Level QQ Plot")
+qqline(sleep_data$Stress.Level, col = "skyblue", lwd = 2)
+```
+The QQ plots suggest that the data does not come from a normal distribution
+
+```{r shapiro_wilk}
+#Sleep duration
+shapiro.test(order(sleep_data$Sleep.Duration))
+
+#Quality of sleep
+shapiro.test(order(sleep_data$Quality.of.Sleep))
+
+#Stress level
+shapiro.test(order(sleep_data$Stress.Level))
+```
+The p-value in all cases above is significantly small so we can reject the null hypothesis that the data comes from a normal distribution
+
+
+```{r kruskal_wallis}
+# 10. Using Kruskal-Wallis test to test if mean quality of sleep is same across
+# both male and female (alpha 0.05)
+
+# H0: mean quality of sleep is same across both male and female
+
+kruskal.test(Quality.of.Sleep ~ Gender, data = sleep_data)
+```
+Since p-value is very small we can reject the null hypothesis and conclude that mean quality of sleep varies between male and female subjects
+
+
+```{r kw2}
+# Using Kruskal-Wallis test to test if mean sleep duration is same across
+# both male and female (alpha 0.05)
+
+# H0: mean sleep duration is same across both male and female
+
+kruskal.test(Sleep.Duration ~ Gender, data = sleep_data)
+```
+Since p-value is less than alpha we reject the null hypothesis 
+
+```{r kw3}
+# Using Kruskal-Wallis test to test if mean stress level is same across
+# both male and female (alpha 0.05)
+
+# H0: mean stress level is same across both male and female
+
+kruskal.test(Stress.Level ~ Gender, data = sleep_data)
+```
+Here also the p-value is very small, therefore we reject the null hypothesis
+
+
+```{r independece_test}
+# 11. Using chi-squared test to check if quality of sleep is independent of
+# sleep duration
+
+# H0: quality of sleep is independent of sleep duration
+
+chisq.test(sleep_data$Quality.of.Sleep, sleep_data$Sleep.Duration)
+```
+Since p-value is significantly small, we reject the null hypothesis
+
+```{r independence_test2}
+# Using chi-squared test to check if stress level is independent of quality of 
+# sleep 
+
+# H0: stress level is independent of quality of sleep
+
+chisq.test(sleep_data$Stress.Level, sleep_data$Quality.of.Sleep)
+```
+The p-value is very small so we reject the null hypothesis
+
+```{r independence_test3}
+# Using chi-squared test to check if sleep disorder is independent of stress 
+# level
+
+# H0: sleep disorder is independent of stress level
+
+chisq.test(sleep_data$Sleep.Disorder, sleep_data$Stress.Level)
+```
+We can reject the null hypothesis since p-value is very small.
+
+
+```{r simple_linear_regression}
+#Correlation matrix of variables
+matrix1 <- select(sleep_data, Sleep.Duration, Quality.of.Sleep, Physical.Activity.Level, Stress.Level, Heart.Rate)
+
+cor(matrix1, method = "pearson")
+```
+Quality of sleep and sleep duration have the highest positive correlation while stress level and quality have the highest negative correlation followed by stress level and sleep duration.
+
+```{r lm_model}
+#Creating a simple linear regression model
+
+#The dependent variable is Quality of Sleep and the independent variables 
+#include Sleep Duration, Stress Level and Physical Activity Level
+
+model <- lm(formula = Quality.of.Sleep ~ Sleep.Duration + Heart.Rate + Age +
+            Physical.Activity.Level + Stress.Level, data = sleep_data)
+summary(model)
+```
+The coefficient estimate of sleep duration has the highest positive correlation with the dependent variable and stress level has the highest negative correlation. The significance of both the estimates suggest that they have a strong impact on the dependent variable. The adjusted r-squared value suggests that around 89.61 percent variability in Y is explained by the independent variables. A small p-value suggests that the independent variable have a strong impact on Y.
+
+```{r interaction_terms}
+#Including interaction terms Stress Level and Sleep Disorder
+model_interaction <- lm(Quality.of.Sleep ~ Sleep.Duration + Age + Heart.Rate +
+                          Stress.Level*Sleep.Disorder,data = sleep_data)
+summary(model_interaction)
+```
+The impact of stress level on sleep apnea disorder has a mild negative correlation and its significance of estimate suggests little impact on the dependent variable.
+The adjusted r-squared value suggests that around 92.59 percent of variability in Y is explained by independent variables. A small p-value suggests that the independent variables have a strong impact on the dependent variable.
+
+```{r test_model}
+#Akaike information criterion (AIC) on first model
+AIC(model)
+
+#Akaike information criterion (BIC) on second model
+AIC(model_interaction)
+```
+Result values of both the tests suggest that the second model which includes interaction terms has less loss of information and is of better fit and higher quality.
